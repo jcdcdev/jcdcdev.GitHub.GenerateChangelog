@@ -12,6 +12,9 @@ inputs:
   target-version:
     description: "Version"
     required: true
+  github-token:
+    description: "GitHub token"
+    required: true
 outputs:
   changelog:
     description: "Changelog"
@@ -53,7 +56,7 @@ runs:
       with:
         head-ref: ${{ env.TARGET_VERSION }}
         base-ref: ${{ env.PREVIOUS_VERSION }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ inputs.github-token }}
         filter-author: (jcdcdev|dependabot|renovate\\[bot\\]|dependabot\\[bot\\]|Renovate Bot)
         filter: '(\+semver:\s?(breaking|major|feature|minor|fix|patch)|\+changelog-ignore:.*|Merge.*)'
         custom-emoji: "feature🌟,nuget📦,chore🧹"
