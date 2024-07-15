@@ -1,5 +1,5 @@
 name: "📄 Generate Changelog - jcdcdev"
-description: ""
+description: "Generates a changelog between two new versions"
 author: "James Carter"
 branding:
   icon: "refresh-cw"
