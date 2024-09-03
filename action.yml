@@ -87,10 +87,4 @@ runs:
         }
         
         $changelog = $changelog -replace '\n', "`n"
-        # echo changelog=$changelog >> $env:GITHUB_OUTPUT
-
-        {
-          echo 'changelog<<EOF'
-          echo "$changelog"
-          echo EOF
-        } >> $env:GITHUB_OUTPUT
+        echo changelog=$changelog >> $env:GITHUB_OUTPUT
