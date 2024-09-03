@@ -64,8 +64,10 @@ runs:
           $suffixString = $suffixParts[1] -as [string]
       
           $suffix = 999
+          Write-Host "Suffix string is $suffixString"
           if ($suffixString -ne '') {
               $suffix = [int]($suffix -replace '[^0-9]', '')
+              Write-Host "Suffix is $suffix"
           }
       
           $factor = 4
