@@ -35,6 +35,8 @@ runs:
     - if: ${{ env.PREVIOUS_VERSION == '' }}
       id: find-previous-tag
       shell: pwsh
+      env:
+        VERSION: ${{ inputs.version }}
       run: |
         function Pad($value, $length) {
           $value = $value.ToString()
@@ -73,7 +75,6 @@ runs:
               '*rc*' { $factor = 3 }
           }
           
-          $VERSION = "$env:TARGET_VERSION"
           $suffix = "$factor$suffix"
       
           $majorIndex = Pad $major.ToString() 3
