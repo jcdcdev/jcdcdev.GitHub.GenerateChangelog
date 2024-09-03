@@ -15,6 +15,14 @@ inputs:
   github-token:
     description: "GitHub token"
     required: true
+  include-version-as-heading:
+    description: "Include the version as a heading in the changelog"
+    required: false
+    default: false
+  custom-emoji:
+    description: "Custom emoji for changelog filter"
+    required: false
+    default: "feature🌟,nuget📦,chore🧹"
 outputs:
   changelog:
     description: "Changelog"
@@ -22,7 +30,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Set env
+    - name: Set environment variables
       id: set-env
       shell: bash
       run: |
@@ -32,7 +40,8 @@ runs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - if: ${{ env.PREVIOUS_VERSION == '' }}
+    - name: Find previous version
+      if: ${{ env.PREVIOUS_VERSION == '' }}
       id: find-previous-tag
       shell: pwsh
       env:
@@ -154,7 +163,7 @@ runs:
 
         Write-Host "The nearest previous tag to $env:VERSION is $previousVersion"
         echo "PREVIOUS_VERSION=$previousVersion" >> $env:GITHUB_ENV
-    - name: Confirm previous version
+    - name: Validate previous version
       shell: bash
       run: |
         if [ -z "${{ env.PREVIOUS_VERSION }}" ]; then
@@ -164,7 +173,7 @@ runs:
 
         echo "Previous version: ${{ env.PREVIOUS_VERSION }}"
     - name: Generate changelog
-      id: generate
+      id: generate-changelog
       uses: jaywcjlove/changelog-generator@main
       with:
         head-ref: ${{ env.TARGET_VERSION }}
@@ -172,7 +181,7 @@ runs:
         token: ${{ inputs.github-token }}
         filter-author: (jcdcdev|dependabot|renovate\\[bot\\]|dependabot\\[bot\\]|Renovate Bot)
         filter: '(\+semver:\s?(breaking|major|feature|minor|fix|patch)|\+changelog-ignore:.*|Merge.*)'
-        custom-emoji: "feature🌟,nuget📦,chore🧹"
+        custom-emoji: ${{ inputs.custom-emoji }}
     - name: Create Changelog Body
       shell: pwsh
       id: changelog
@@ -182,15 +191,22 @@ runs:
         CHANGELOG: |
           Compare [${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})
 
-          ${{ steps.generate.outputs.changelog }}
+          ${{ steps.generate-changelog.outputs.changelog }}
       run: |
-        $changelog = "${{ env.CHANGELOG }}"
+        $changelog = ""
+        if (${{ inputs.include-version-as-heading }}) {
+          $changelog = "## ${{ env.TARGET_VERSION }}`n"
+        }
 
+        $changelog = $changelog + $env:CHANGELOG
+
+        Write-Host "Searching for issues in changelog"
         $terms = 'close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved'
         $terms | ForEach-Object {
           $changelog = $changelog -replace "($_ #(\d+))", '[Issue #$2](https://github.com/${{ env.REPO }}/issues/$2)'
         }
         
+        Write-Host "Searching for commits in changelog"
         $commit_hashes = git log --pretty=format:"%h"
         $commit_hashes | ForEach-Object {
           $commit_hash = $_
@@ -200,7 +216,7 @@ runs:
         $changelog = $changelog -replace '\n', "`n"
         Set-Content -Path ./changelog.md -Value $changelog -NoNewline
 
-        Write-Host "CHANGELOG:`n`n$changelog`n`n"
+        Write-Host "`n`nCHANGELOG:`n`n$changelog`n`n"
     - name: Set Changelog Output
       shell: bash
       id: changelog-output
