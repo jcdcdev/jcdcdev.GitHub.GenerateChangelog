@@ -18,7 +18,7 @@ jobs:
       id: generate-changelog
       uses: jcdcdev/jcdcdev.GitHub.GenerateChangelog@main
       with:
-        target-version: ${{ github.event.release.tag_name }}
+        target-version: ${{ env.target-version }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Output Changelog
       run: echo "${{ steps.generate-changelog.outputs.changelog }}"
