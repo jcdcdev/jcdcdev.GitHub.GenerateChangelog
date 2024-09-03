@@ -180,8 +180,6 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
         REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
         CHANGELOG: |
-          ## ${{env.TARGET_VERSION}}
-
           Compare [${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})
 
           ${{ steps.generate.outputs.changelog }}
