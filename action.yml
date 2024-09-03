@@ -38,34 +38,113 @@ runs:
       env:
         Version: ${{ inputs.version }}
       run: |
-        git fetch --tags
-        $tags = git tag
-        $sortedTags = $tags | Sort-Object -Descending
+        function Pad($value, $length) {
+          $value = $value.ToString()
+          $valueLength = $value.Length
+          for ($i = 0; $i -lt $length - $valueLength; $i++) {
+              $value = "$($value)0"
+          }
+          return $value
+        }
+        
+        function Get-UniqueIndex($originalTag) {
+          $tag = $originalTag -replace '^v'
+          $parts = $tag -split '\.'
+                  
+          if ($parts.Count -lt 3) {
+              Write-Warning "Tag '$tag' does not conform to expected SemVer format."
+              return 0
+          }
+                  
+          $major = [int]$parts[0]
+          $minor = [int]$parts[1] -as [int]
+          $end = $parts[2]
+          $suffixParts = $end -split '-'
+          $patch = [int]$suffixParts[0] -as [int]
+          $suffixString = $suffixParts[1] -as [string]
+      
+          $suffix = 999
+          if ($suffixString -ne '') {
+              $suffix = [int]($suffix -replace '[^0-9]', '')
+          }
+      
+          $factor = 4
+          switch -wildcard ($suffixString) {
+              '*alpha*' { $factor = 1 }
+              '*beta*' { $factor = 2 }
+              '*rc*' { $factor = 3 }
+          }
+          
+          $suffix = "$factor$suffix"
+      
+          $majorIndex = Pad $major.ToString() 3
+          $minorIndex = Pad $minor.ToString() 3
+          $patchIndex = Pad $patch.ToString() 3
+          $suffixIndex = Pad $suffix.ToString() 4
+          $index = "$majorIndex$minorIndex$patchIndex$suffixIndex"
+          # Write-Host "Tag '$originalTag'`n$majorIndex, $minorIndex, $patchIndex, $suffixIndex, $index`n`n"
+          return $index -as [long]
+        }
+      
+        function Get-Tags($startVersion, $endVersion) {
+          Write-Host "Start version is $startVersion"
+          Write-Host "End version is $endVersion"
+      
+          $startIndex = Get-UniqueIndex $startVersion
+          $endIndex = Get-UniqueIndex $endVersion
+      
+          git fetch --tags --quiet
+      
+          $allTags = @() 
+          
+          git tag | ForEach-Object { 
+            $originalTag = $_
+            $uniqueIndex = Get-UniqueIndex $originalTag
+            $tagObj = New-Object PSObject -Property @{
+              Tag         = $originalTag
+              UniqueIndex = $uniqueIndex
+            }
+            if ($uniqueIndex -ge $startIndex -and $uniqueIndex -le $endIndex) {
+              $allTags += $tagObj
+            }
+          } 
+      
+          $outputTags = $allTags | Sort-Object -Property UniqueIndex
+          return $outputTags
+        }
+        
+        $tags = Get-Tags "0.0.0" "$env:Version"
+        Write-Host "Tags to consider: $tags"
+        
+        $includePrerelease = $env:Version -match "alpha|beta|rc"
         $previousVersion = $null
-        $versionExists = $false
 
-        foreach ($tag in $sortedTags) {
-          echo "Checking tag $tag"
-          if ($tag -lt $env:Version) {
-            if ($previousVersion -eq $null -or $tag -gt $previousVersion) {
-              if ($tag -match "alpha|beta|rc") {
-                Write-Output "$tag is prerelease"
-                if ($env:Version -notmatch "alpha|beta|rc") {
-                  Write-Output "Skipping as $env:Version is not prerelease"
-                  continue
-                }
-              }
+        for ($i = $tags.Count - 1; $i -ge 0; $i--) {
+          $tag = $tags[$i]
 
-              $previousVersion = $tag
+          if($tag.UniqueIndex -ge $env:Version) {
+            Write-Host "Skipping as $tag.Tag is greater than $env:Version"
+            continue
+          }
+
+          $isPreRelease = $tag.Tag -match "alpha|beta|rc"
+          if ($isPreRelease) {
+            if (!$includePrerelease) {
+              Write-Host "Skipping as $tag.Tag is prerelease"
+              continue
             }
           }
+
+          Write-Host "Found $tag.Tag"
+          $previousVersion = $tag.Tag
+          break
         }
 
-        if ($previousVersion -eq $null) {
+        if ($null -eq $previousVersion) {
           throw "No previous tag found before $env:Version"
         } 
 
-        Write-Output "The nearest previous tag to $env:Version is $previousVersion"
+        Write-Host "The nearest previous tag to $env:Version is $previousVersion"
         echo "PREVIOUS_VERSION=$previousVersion" >> $env:GITHUB_ENV
     - name: Confirm previous version
       shell: bash
