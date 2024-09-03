@@ -86,6 +86,7 @@ runs:
 
         Write-Host "CHANGELOG:`n`n$changelog`n`n"
       - name: Set Changelog Output
+        shell: bash
         id: changelog-output
         run: |
           changelog=$(cat ./changelog.md)

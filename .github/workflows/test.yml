@@ -1,0 +1,19 @@
+name: Generate Changelog on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  generate-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Generate Changelog
+      id: generate-changelog
+      uses: jcdcdev/jcdcdev.GitHub.GenerateChangelog@main
+      with:
+        target-version: ${{ github.event.release.tag_name }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Output Changelog
+      run: echo "${{ steps.generate-changelog.outputs.changelog }}"
