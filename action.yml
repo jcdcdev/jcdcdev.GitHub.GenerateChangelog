@@ -99,7 +99,7 @@ runs:
           $suffixIndex = PadLeft $suffix.ToString() 3
 
           $index = "$majorIndex$minorIndex$patchIndex$releaseType$suffixIndex"
-          Write-Host "Tag '$originalTag'`n$majorIndex, $minorIndex, $patchIndex, $releaseType, $suffixIndex, $index`n`n"
+          # Write-Host "Tag '$originalTag'`n$majorIndex, $minorIndex, $patchIndex, $releaseType, $suffixIndex, $index`n`n"
           return $index -as [long]
         }
       
@@ -131,7 +131,7 @@ runs:
         }
         
         $tags = Get-Tags "0.0.0" "$env:VERSION"
-        Write-Host "Tags to consider: $tags"
+        # Write-Host "Tags to consider: $tags"
         
         $includePrerelease = $env:VERSION -match "alpha|beta|rc"
         $previousVersion = $null
@@ -140,19 +140,19 @@ runs:
           $tag = $tags[$i]
 
           if($tag.UniqueIndex -ge $currentVersionIndex) {
-            Write-Host "Skipping as $tag.Tag is greater than $env:VERSION"
+            # Write-Host "Skipping as $tag.Tag is greater than $env:VERSION"
             continue
           }
 
           $isPreRelease = $tag.Tag -match "alpha|beta|rc"
           if ($isPreRelease) {
             if (!$includePrerelease) {
-              Write-Host "Skipping as $tag.Tag is prerelease"
+              # Write-Host "Skipping as $tag.Tag is prerelease"
               continue
             }
           }
 
-          Write-Host "Found $tag.Tag"
+          # Write-Host "Found $tag.Tag"
           $previousVersion = $tag.Tag
           break
         }
@@ -192,7 +192,7 @@ runs:
           [![Compare](https://img.shields.io/badge/Compare-${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})
 
           ### Changes in ${{ env.TARGET_VERSION }}
-          
+
           ${{ steps.generate-changelog.outputs.changelog }}
       run: |
         $changelog = ""
