@@ -66,7 +66,6 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github-token }}
         REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
-      env:
         CHANGELOG: |
           ## ${{ inputs.target-version }}
 
