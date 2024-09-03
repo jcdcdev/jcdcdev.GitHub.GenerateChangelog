@@ -88,7 +88,7 @@ runs:
           $minorIndex = Pad $minor.ToString() 3
           $patchIndex = Pad $patch.ToString() 3
           $suffixIndex = PadLeft $suffix.ToString() 3
-          
+
           $index = "$majorIndex$minorIndex$patchIndex$releaseType$suffixIndex"
           Write-Host "Tag '$originalTag'`n$majorIndex, $minorIndex, $patchIndex, $releaseType, $suffixIndex, $index`n`n"
           return $index -as [long]
@@ -180,7 +180,7 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
         REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
         CHANGELOG: |
-          ## ${{ inputs.target-version }}
+          ## ${{env.TARGET_VERSION}}
 
           Compare [${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})
 
