@@ -85,13 +85,13 @@ runs:
         Set-Content -Path ./changelog.md -Value $changelog -NoNewline
 
         Write-Host "CHANGELOG:`n`n$changelog`n`n"
-      - name: Set Changelog Output
-        shell: bash
-        id: changelog-output
-        run: |
-          changelog=$(cat ./changelog.md)
-          {
-            echo 'changelog<<EOF'
-            echo "${changelog}"
-            echo EOF
-          } >> "$GITHUB_OUTPUT"  
+    - name: Set Changelog Output
+      shell: bash
+      id: changelog-output
+      run: |
+        changelog=$(cat ./changelog.md)
+        {
+          echo 'changelog<<EOF'
+          echo "${changelog}"
+          echo EOF
+        } >> "$GITHUB_OUTPUT"  

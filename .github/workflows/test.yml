@@ -1,7 +1,6 @@
 name: 🐛 [TEST] Generate Changelog
 
 on:
-  release:
   workflow_dispatch:
     inputs:
       target-version:
