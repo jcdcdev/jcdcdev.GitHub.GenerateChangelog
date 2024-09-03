@@ -1,4 +1,4 @@
-name: Create Release and Push to Marketplace
+name: 🚀 Deploy
 on:
   workflow_dispatch:
   pull_request:

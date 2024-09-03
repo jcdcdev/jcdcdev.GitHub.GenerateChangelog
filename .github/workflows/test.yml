@@ -1,9 +1,15 @@
-name: Generate Changelog on Release
+name: 🐛 [TEST] Generate Changelog
 
 on:
   release:
-    types: [created]
-
+  workflow_dispatch:
+    inputs:
+      target-version:
+        description: 'Version'
+        required: false
+        default: ''
+env:
+    target-version: ${{ inputs.target-version || github.event.release.tag_name }}
 jobs:
   generate-changelog:
     runs-on: ubuntu-latest
@@ -14,6 +20,6 @@ jobs:
       uses: jcdcdev/jcdcdev.GitHub.GenerateChangelog@main
       with:
         target-version: ${{ github.event.release.tag_name }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Output Changelog
       run: echo "${{ steps.generate-changelog.outputs.changelog }}"
