@@ -33,9 +33,60 @@ runs:
       with:
         fetch-depth: 0
     - if: ${{ env.PREVIOUS_VERSION == '' }}
-      shell: bash
+      id: find-previous-tag
+      shell: pwsh
+      env:
+        Version: ${{ inputs.version }}
       run: |
-        echo "PREVIOUS_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> $GITHUB_ENV
+        function Get-Index($originalTag) {
+          Write-Host "Input is $originalTag"
+          $tag = $originalTag -replace '^v'
+          Write-Host "Tag is $tag"
+          # Split the tag into parts
+          $parts = $tag -split '\.'
+      
+          # Validate that there are at least three parts
+          if ($parts.Count -lt 3) {
+              Write-Warning "Tag '$tag' does not conform to expected SemVer format."
+              return 0
+          }
+      
+          # Convert parts to integers
+          $major = [int]$parts[0]
+          $minor = [int]$parts[1] -as [int]
+          $patch = [int]$parts[2] -as [int]
+      
+          # Return a calculated version number based on SemVer rules
+          $version = ($major * 10000) + ($minor * 100) + $patch
+          return $version
+        }
+
+        git fetch --tags
+
+        $allTags = @() 
+        
+        git tag | ForEach-Object { 
+            $originalTag = $_
+            $index = Get-Index $originalTag
+            $tagObj = New-Object PSObject -Property @{
+                Tag = $originalTag
+                Index = $index
+            }
+            $allTags += $tagObj
+        } 
+
+        $allTags = $allTags | Sort-Object -Property Index
+        # find the previous tag by selecting the version before the current one (by index)
+        $index = Get-Index $env:Version
+        $previousVersion = $allTags | Where-Object { $_.Index -lt $index } | Select-Object -Last 1
+
+        if ($previousVersion -eq $null) {
+          throw "No previous tag found before $env:Version"
+        } 
+    
+        $previousTag = $previousVersion.Tag
+        Write-Output "The nearest previous tag to $env:Version is $previousTag"
+        echo "PREVIOUS_VERSION=$previousTag" >> $env:GITHUB_ENV
     - name: Confirm previous version
       shell: bash
       run: |
