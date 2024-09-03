@@ -44,10 +44,10 @@ runs:
           exit 1
         fi
 
-        if [ "$(printf '%s\n' "${{ env.PREVIOUS_VERSION }}" "${{ env.TARGET_VERSION }}" | sort -V | head -n1)" != "${{ env.PREVIOUS_VERSION }}" ]; then
-          echo "Previous version is newer than target version, skipping changelog generation"
-          exit 1
-        fi
+        # if [ "$(printf '%s\n' "${{ env.PREVIOUS_VERSION }}" "${{ env.TARGET_VERSION }}" | sort -V | head -n1)" != "${{ env.PREVIOUS_VERSION }}" ]; then
+        #   echo "Previous version is newer than target version, skipping changelog generation"
+        #   exit 1
+        # fi
 
         echo "Previous version: ${{ env.PREVIOUS_VERSION }}"
     - name: Generate changelog
@@ -61,16 +61,37 @@ runs:
         filter: '(\+semver:\s?(breaking|major|feature|minor|fix|patch)|\+changelog-ignore:.*|Merge.*)'
         custom-emoji: "feature🌟,nuget📦,chore🧹"
     - name: Create Changelog Body
-      shell: bash
+      shell: pwsh
       id: changelog
       env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
+      env:
         CHANGELOG: |
+          ## ${{ inputs.target-version }}
+
           Compare [${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})
 
           ${{ steps.generate.outputs.changelog }}
       run: |
+        $changelog = "${{ env.CHANGELOG }}"
+
+        $terms = 'close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved'
+        $terms | ForEach-Object {
+          $changelog = $changelog -replace "($_ #(\d+))", '[Issue #$2](https://github.com/${{ env.REPO }}/issues/$2)'
+        }
+        
+        $commit_hashes = git log --pretty=format:"%h"
+        $commit_hashes | ForEach-Object {
+          $commit_hash = $_
+          $changelog = $changelog -replace "($commit_hash)", "[$commit_hash](https://github.com/${{ env.REPO }}/commit/$commit_hash)"
+        }
+        
+        $changelog = $changelog -replace '\n', "`n"
+        # echo changelog=$changelog >> $env:GITHUB_OUTPUT
+
         {
           echo 'changelog<<EOF'
-          echo "${CHANGELOG}"
+          echo "$changelog"
           echo EOF
-        } >> "$GITHUB_OUTPUT"
+        } >> $env:GITHUB_OUTPUT
