@@ -18,7 +18,7 @@ inputs:
 outputs:
   changelog:
     description: "Changelog"
-    value: ${{ steps.changelog.outputs.changelog }}
+    value: ${{ steps.changelog-output.outputs.changelog }}
 runs:
   using: "composite"
   steps:
@@ -43,11 +43,6 @@ runs:
           echo "No previous version found, skipping changelog generation"
           exit 1
         fi
-
-        # if [ "$(printf '%s\n' "${{ env.PREVIOUS_VERSION }}" "${{ env.TARGET_VERSION }}" | sort -V | head -n1)" != "${{ env.PREVIOUS_VERSION }}" ]; then
-        #   echo "Previous version is newer than target version, skipping changelog generation"
-        #   exit 1
-        # fi
 
         echo "Previous version: ${{ env.PREVIOUS_VERSION }}"
     - name: Generate changelog
@@ -87,4 +82,15 @@ runs:
         }
         
         $changelog = $changelog -replace '\n', "`n"
-        echo changelog=$changelog >> $env:GITHUB_OUTPUT
+        Set-Content -Path ./changelog.md -Value $changelog -NoNewline
+
+        Write-Host "CHANGELOG:`n`n$changelog`n`n"
+      - name: Set Changelog Output
+        id: changelog-output
+        run: |
+          changelog=$(cat ./changelog.md)
+          {
+            echo 'changelog<<EOF'
+            echo "${changelog}"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"  
