@@ -191,6 +191,8 @@ runs:
         CHANGELOG: |
           [![Compare](https://img.shields.io/badge/Compare-${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})
 
+          ### Changes in ${{ env.TARGET_VERSION }}
+          
           ${{ steps.generate-changelog.outputs.changelog }}
       run: |
         $changelog = ""
