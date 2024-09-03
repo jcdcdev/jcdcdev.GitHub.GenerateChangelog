@@ -113,17 +113,17 @@ runs:
           return $outputTags
         }
         
-        $tags = Get-Tags "0.0.0" "$VERSION"
+        $tags = Get-Tags "0.0.0" "$env:VERSION"
         Write-Host "Tags to consider: $tags"
         
-        $includePrerelease = $VERSION -match "alpha|beta|rc"
+        $includePrerelease = $env:VERSION -match "alpha|beta|rc"
         $previousVersion = $null
 
         for ($i = $tags.Count - 1; $i -ge 0; $i--) {
           $tag = $tags[$i]
 
-          if($tag.UniqueIndex -ge $VERSION) {
-            Write-Host "Skipping as $tag.Tag is greater than $VERSION"
+          if($tag.UniqueIndex -ge $env:VERSION) {
+            Write-Host "Skipping as $tag.Tag is greater than $env:VERSION"
             continue
           }
 
@@ -141,10 +141,10 @@ runs:
         }
 
         if ($null -eq $previousVersion) {
-          throw "No previous tag found before $VERSION"
+          throw "No previous tag found before $env:VERSION"
         } 
 
-        Write-Host "The nearest previous tag to $VERSION is $previousVersion"
+        Write-Host "The nearest previous tag to $env:VERSION is $previousVersion"
         echo "PREVIOUS_VERSION=$previousVersion" >> $env:GITHUB_ENV
     - name: Confirm previous version
       shell: bash
