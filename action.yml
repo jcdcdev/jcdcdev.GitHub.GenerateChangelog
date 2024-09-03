@@ -9,7 +9,7 @@ inputs:
     description: "Previous version - defaults to previous tag if not provided"
     required: false
     default: ""
-  target-version:
+  version:
     description: "Version"
     required: true
   github-token:
@@ -26,7 +26,7 @@ runs:
       id: set-env
       shell: bash
       run: |
-        echo "TARGET_VERSION=${{ inputs.target-version }}" >> $GITHUB_ENV
+        echo "TARGET_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
         echo "PREVIOUS_VERSION=${{ inputs.previous-version }}" >> $GITHUB_ENV
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -35,8 +35,6 @@ runs:
     - if: ${{ env.PREVIOUS_VERSION == '' }}
       id: find-previous-tag
       shell: pwsh
-      env:
-        Version: ${{ inputs.version }}
       run: |
         function Pad($value, $length) {
           $value = $value.ToString()
@@ -75,6 +73,7 @@ runs:
               '*rc*' { $factor = 3 }
           }
           
+          $VERSION = "$env:TARGET_VERSION"
           $suffix = "$factor$suffix"
       
           $majorIndex = Pad $major.ToString() 3
@@ -113,17 +112,17 @@ runs:
           return $outputTags
         }
         
-        $tags = Get-Tags "0.0.0" "$env:Version"
+        $tags = Get-Tags "0.0.0" "$VERSION"
         Write-Host "Tags to consider: $tags"
         
-        $includePrerelease = $env:Version -match "alpha|beta|rc"
+        $includePrerelease = $VERSION -match "alpha|beta|rc"
         $previousVersion = $null
 
         for ($i = $tags.Count - 1; $i -ge 0; $i--) {
           $tag = $tags[$i]
 
-          if($tag.UniqueIndex -ge $env:Version) {
-            Write-Host "Skipping as $tag.Tag is greater than $env:Version"
+          if($tag.UniqueIndex -ge $VERSION) {
+            Write-Host "Skipping as $tag.Tag is greater than $VERSION"
             continue
           }
 
@@ -141,10 +140,10 @@ runs:
         }
 
         if ($null -eq $previousVersion) {
-          throw "No previous tag found before $env:Version"
+          throw "No previous tag found before $VERSION"
         } 
 
-        Write-Host "The nearest previous tag to $env:Version is $previousVersion"
+        Write-Host "The nearest previous tag to $VERSION is $previousVersion"
         echo "PREVIOUS_VERSION=$previousVersion" >> $env:GITHUB_ENV
     - name: Confirm previous version
       shell: bash
