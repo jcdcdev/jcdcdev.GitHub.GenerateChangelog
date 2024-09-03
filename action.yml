@@ -189,8 +189,6 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
         REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
         CHANGELOG: |
-          [![Compare](https://img.shields.io/badge/Compare-${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})
-
           ### Changes in ${{ env.TARGET_VERSION }}
 
           ${{ steps.generate-changelog.outputs.changelog }}
@@ -199,6 +197,11 @@ runs:
         if (${{ inputs.include-version-as-heading }}) {
           $changelog = "## ${{ env.TARGET_VERSION }}`n"
         }
+
+        $COMPARE_TEXT = "${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}"
+        # change - to escaped html code
+        $COMPARE_TEXT = $COMPARE_TEXT -replace "-", "--"
+        $changelog = $changelog + "[![Compare](https://img.shields.io/badge/Compare-$COMPARE_TEXT-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})"
 
         $changelog = $changelog + $env:CHANGELOG
 
