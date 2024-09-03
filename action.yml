@@ -118,11 +118,11 @@ runs:
         
         $includePrerelease = $env:VERSION -match "alpha|beta|rc"
         $previousVersion = $null
-
+        $currentVersionIndex = Get-UniqueIndex "$env:VERSION"
         for ($i = $tags.Count - 1; $i -ge 0; $i--) {
           $tag = $tags[$i]
 
-          if($tag.UniqueIndex -ge $env:VERSION) {
+          if($tag.UniqueIndex -ge $currentVersionIndex) {
             Write-Host "Skipping as $tag.Tag is greater than $env:VERSION"
             continue
           }
