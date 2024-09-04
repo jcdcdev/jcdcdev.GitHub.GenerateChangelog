@@ -200,11 +200,11 @@ runs:
           ${{ steps.generate-changelog.outputs.changelog }}
       run: |
         $changelog = ""
-        if (${{ inputs.include-version-as-heading }}) {
+        if ("${{ inputs.include-version-as-heading }}" -eq "true") {
           $changelog = "### Changes in ${{ env.TARGET_VERSION }}`n`n"
         }
 
-        if (${{ inputs.include-compare-link }}) {
+        if ("${{ inputs.include-compare-link }}" -eq "true") {
           $COMPARE_TEXT = "${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}"
           # change - to escaped html code
           $COMPARE_TEXT = $COMPARE_TEXT -replace "-", "--"
@@ -213,7 +213,7 @@ runs:
         
         $changelog = $changelog + $env:CHANGELOG
 
-        if (${{ inputs.include-links }}) {
+        if ("${{ inputs.include-links }}" -eq "true") {
           Write-Host "Searching for issues in changelog"
           $terms = 'close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved'
           $terms | ForEach-Object {
