@@ -195,13 +195,13 @@ runs:
       run: |
         $changelog = ""
         if (${{ inputs.include-version-as-heading }}) {
-          $changelog = "## ${{ env.TARGET_VERSION }}`n"
+          $changelog = "## ${{ env.TARGET_VERSION }}`n`n"
         }
 
         $COMPARE_TEXT = "${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}"
         # change - to escaped html code
         $COMPARE_TEXT = $COMPARE_TEXT -replace "-", "--"
-        $changelog = $changelog + "[![Compare](https://img.shields.io/badge/Compare-$COMPARE_TEXT-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})`n"
+        $changelog = $changelog + "[![Compare](https://img.shields.io/badge/Compare-$COMPARE_TEXT-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})`n`n"
 
         $changelog = $changelog + $env:CHANGELOG
 
