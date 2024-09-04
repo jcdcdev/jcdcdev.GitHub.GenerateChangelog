@@ -201,7 +201,7 @@ runs:
         $COMPARE_TEXT = "${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}"
         # change - to escaped html code
         $COMPARE_TEXT = $COMPARE_TEXT -replace "-", "--"
-        $changelog = $changelog + "[![Compare](https://img.shields.io/badge/Compare-$COMPARE_TEXT-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})"
+        $changelog = $changelog + "[![Compare](https://img.shields.io/badge/Compare-$COMPARE_TEXT-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})`n"
 
         $changelog = $changelog + $env:CHANGELOG
 
