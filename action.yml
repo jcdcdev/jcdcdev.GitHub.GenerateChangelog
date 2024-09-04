@@ -18,7 +18,15 @@ inputs:
   include-version-as-heading:
     description: "Include the version as a heading in the changelog"
     required: false
-    default: false
+    default: true
+  include-compare-link:
+    description: "Include a compare link in the changelog"
+    required: false
+    default: true
+  include-links:
+    description: "Include links to issues and commits in the changelog"
+    required: false
+    default: true
   custom-emoji:
     description: "Custom emoji for changelog filter"
     required: false
@@ -189,33 +197,35 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
         REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
         CHANGELOG: |
-          ### Changes in ${{ env.TARGET_VERSION }}
-
           ${{ steps.generate-changelog.outputs.changelog }}
       run: |
         $changelog = ""
         if (${{ inputs.include-version-as-heading }}) {
-          $changelog = "## ${{ env.TARGET_VERSION }}`n`n"
+          $changelog = "### Changes in ${{ env.TARGET_VERSION }}`n`n"
         }
 
-        $COMPARE_TEXT = "${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}"
-        # change - to escaped html code
-        $COMPARE_TEXT = $COMPARE_TEXT -replace "-", "--"
-        $changelog = $changelog + "[![Compare](https://img.shields.io/badge/Compare-$COMPARE_TEXT-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})`n`n"
-
-        $changelog = $changelog + $env:CHANGELOG
-
-        Write-Host "Searching for issues in changelog"
-        $terms = 'close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved'
-        $terms | ForEach-Object {
-          $changelog = $changelog -replace "($_ #(\d+))", '[Issue #$2](https://github.com/${{ env.REPO }}/issues/$2)'
+        if (${{ inputs.include-compare-link }}) {
+          $COMPARE_TEXT = "${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}}"
+          # change - to escaped html code
+          $COMPARE_TEXT = $COMPARE_TEXT -replace "-", "--"
+          $changelog = $changelog + "[![Compare](https://img.shields.io/badge/Compare-$COMPARE_TEXT-394933?style=flat&logo=github)](https://github.com/${{ github.repository }}/compare/${{ env.PREVIOUS_VERSION }}...${{env.TARGET_VERSION}})`n`n"
         }
         
-        Write-Host "Searching for commits in changelog"
-        $commit_hashes = git log --pretty=format:"%h"
-        $commit_hashes | ForEach-Object {
-          $commit_hash = $_
-          $changelog = $changelog -replace "($commit_hash)", "[$commit_hash](https://github.com/${{ env.REPO }}/commit/$commit_hash)"
+        $changelog = $changelog + $env:CHANGELOG
+
+        if (${{ inputs.include-links }}) {
+          Write-Host "Searching for issues in changelog"
+          $terms = 'close', 'closes', 'closed', 'fix', 'fixes', 'fixed', 'resolve', 'resolves', 'resolved'
+          $terms | ForEach-Object {
+            $changelog = $changelog -replace "($_ #(\d+))", '[Issue #$2](https://github.com/${{ env.REPO }}/issues/$2)'
+          }
+          
+          Write-Host "Searching for commits in changelog"
+          $commit_hashes = git log --pretty=format:"%h"
+          $commit_hashes | ForEach-Object {
+            $commit_hash = $_
+            $changelog = $changelog -replace "($commit_hash)", "[$commit_hash](https://github.com/${{ env.REPO }}/commit/$commit_hash)"
+          }
         }
         
         $changelog = $changelog -replace '\n', "`n"
