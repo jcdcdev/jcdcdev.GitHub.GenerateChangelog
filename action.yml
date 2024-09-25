@@ -10,8 +10,11 @@ inputs:
     required: false
     default: ""
   version:
-    description: "Version"
+    description: "Target version"
     required: true
+  head-ref:
+    description: "Head ref to compare against - defaults to any tag that matches input version e.g (v1.0.0)"
+    required: false
   github-token:
     description: "GitHub token"
     required: true
@@ -42,6 +45,16 @@ runs:
       id: set-env
       shell: bash
       run: |
+        HEAD_REF=${{ inputs.head-ref }}
+        if [ -z "$HEAD_REF" ]; then
+          HEAD_REF=${{ inputs.version }}
+        fi
+
+        echo "HEAD_REF=$HEAD_REF"
+        echo "TARGET_VERSION=${{ inputs.version }}"
+        echo "PREVIOUS_VERSION=${{ inputs.previous-version }}"
+
+        echo "HEAD_REF=$HEAD_REF" >> $GITHUB_ENV
         echo "TARGET_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
         echo "PREVIOUS_VERSION=${{ inputs.previous-version }}" >> $GITHUB_ENV
     - name: Checkout repository
@@ -184,7 +197,7 @@ runs:
       id: generate-changelog
       uses: jaywcjlove/changelog-generator@main
       with:
-        head-ref: ${{ env.TARGET_VERSION }}
+        head-ref: ${{ env.HEAD_REF }}
         base-ref: ${{ env.PREVIOUS_VERSION }}
         token: ${{ inputs.github-token }}
         filter-author: (jcdcdev|dependabot|renovate\\[bot\\]|dependabot\\[bot\\]|Renovate Bot)
