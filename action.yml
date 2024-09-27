@@ -15,6 +15,10 @@ inputs:
   head-ref:
     description: "Head ref to compare against - defaults to any tag that matches input version e.g (v1.0.0)"
     required: false
+  base-ref:
+    description: "Base ref to compare against - defaults to the latest tag"
+    required: false
+    default: "main"
   github-token:
     description: "GitHub token"
     required: true
@@ -50,11 +54,19 @@ runs:
           HEAD_REF=${{ inputs.version }}
         fi
 
+        BASE_REF=${{ inputs.base-ref }}
+        if [ -z "$BASE_REF" ]; then
+          BASE_REF=${{ inputs.previous-version }}
+        fi
+
         echo "HEAD_REF=$HEAD_REF"
+        echo "BASE_REF=$BASE_REF"
+
         echo "TARGET_VERSION=${{ inputs.version }}"
         echo "PREVIOUS_VERSION=${{ inputs.previous-version }}"
 
         echo "HEAD_REF=$HEAD_REF" >> $GITHUB_ENV
+        echo "BASE_REF=$BASE_REF" >> $GITHUB_ENV
         echo "TARGET_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
         echo "PREVIOUS_VERSION=${{ inputs.previous-version }}" >> $GITHUB_ENV
     - name: Checkout repository
@@ -62,7 +74,7 @@ runs:
       with:
         fetch-depth: 0
     - name: Find previous version
-      if: ${{ env.PREVIOUS_VERSION == '' }}
+      if: ${{ env.BASE_REF == '' }}
       id: find-previous-tag
       shell: pwsh
       env:
@@ -183,22 +195,22 @@ runs:
         } 
 
         Write-Host "The nearest previous tag to $env:VERSION is $previousVersion"
-        echo "PREVIOUS_VERSION=$previousVersion" >> $env:GITHUB_ENV
+        echo "BASE_REF=$previousVersion" >> $env:GITHUB_ENV
     - name: Validate previous version
       shell: bash
       run: |
-        if [ -z "${{ env.PREVIOUS_VERSION }}" ]; then
+        if [ -z "${{ env.BASE_REF }}" ]; then
           echo "No previous version found, skipping changelog generation"
           exit 1
         fi
 
-        echo "Previous version: ${{ env.PREVIOUS_VERSION }}"
+        echo "Previous version: ${{ env.BASE_REF }}"
     - name: Generate changelog
       id: generate-changelog
       uses: jaywcjlove/changelog-generator@main
       with:
         head-ref: ${{ env.HEAD_REF }}
-        base-ref: ${{ env.PREVIOUS_VERSION }}
+        base-ref: ${{ env.BASE_REF }}
         token: ${{ inputs.github-token }}
         filter-author: (jcdcdev|dependabot|renovate\\[bot\\]|dependabot\\[bot\\]|Renovate Bot)
         filter: '(\+semver:\s?(breaking|major|feature|minor|fix|patch)|\+changelog-ignore:.*|Merge.*)'
