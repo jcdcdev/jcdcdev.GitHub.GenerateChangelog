@@ -18,7 +18,6 @@ inputs:
   base-ref:
     description: "Base ref to compare against - defaults to the latest tag"
     required: false
-    default: "main"
   github-token:
     description: "GitHub token"
     required: true
