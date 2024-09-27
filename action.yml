@@ -207,7 +207,7 @@ runs:
         echo "PREVIOUS_VERSION=${{ env.BASE_REF }}" >> $GITHUB_ENV
     - name: Generate changelog
       id: generate-changelog
-      uses: jaywcjlove/changelog-generator@main
+      uses: jcdcdev/changelog-generator@main
       with:
         head-ref: ${{ env.HEAD_REF }}
         base-ref: ${{ env.BASE_REF }}
