@@ -79,7 +79,7 @@ runs:
       env:
         VERSION: ${{ inputs.version }}
       run: |
-        $previousVersion = ./getPreviousVersion.ps1 -version $env:VERSION
+        $previousVersion = & ./getPreviousVersion.ps1 -version $env:VERSION
         echo "BASE_REF=$previousVersion" >> $env:GITHUB_ENV
     - name: Validate previous version
       shell: bash
