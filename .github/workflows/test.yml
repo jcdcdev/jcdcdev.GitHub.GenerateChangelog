@@ -4,30 +4,30 @@ on:
   workflow_dispatch:
     inputs:
       target-version:
-        description: 'Version'
+        description: "Version"
         required: false
-        default: ''
+        default: ""
   release:
     types: [published, created, released]
 env:
-    target-version: ${{ inputs.target-version || github.event.release.tag_name }}
+  target-version: ${{ inputs.target-version || github.event.release.tag_name }}
 jobs:
   generate-changelog:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Generate Changelog
-      id: generate-changelog
-      uses: jcdcdev/jcdcdev.GitHub.GenerateChangelog@main
-      with:
-        version: ${{ env.target-version }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Output Changelog
-      run: |
-        echo "${{ steps.generate-changelog.outputs.changelog }}"
-        echo "${{ steps.generate-changelog.outputs.changelog }}" > changelog.md
-    - name: Upload Changelog
-      uses: actions/upload-artifact@v4
-      with:
-        name: changelog-${{ env.target-version }}
-        path: changelog.md
+      - name: Generate Changelog
+        id: generate-changelog
+        uses: jcdcdev/jcdcdev.Github.GenerateChangelog@v1
+        with:
+          version: ${{ env.target-version }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Output Changelog
+        run: |
+          echo "${{ steps.generate-changelog.outputs.changelog }}"
+          echo "${{ steps.generate-changelog.outputs.changelog }}" > changelog.md
+      - name: Upload Changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-${{ env.target-version }}
+          path: changelog.md
